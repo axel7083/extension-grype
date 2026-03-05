@@ -38,6 +38,8 @@ import type { Endpoints } from '@octokit/types';
 import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import AdmZip from 'adm-zip';
+import * as tar from 'tar';
+import { platform as nodePlatform } from 'node:process';
 
 vi.mock(import('node:fs'));
 vi.mock(import('node:fs/promises'));
@@ -272,20 +274,31 @@ describe('installer', () => {
       await installer.selectVersion();
     });
 
-    test('expect zip to be unzip', async () => {
-      await installer.doInstall(LOGGER_MOCK);
+    test(
+      'expect zip to be unzip',
+      {
+        skip: nodePlatform !== 'win32',
+      },
+      async () => {
+        await installer.doInstall(LOGGER_MOCK);
 
-      expect(vi.mocked(AdmZip).mock.instances).toHaveLength(1);
-      const instance = vi.mocked(AdmZip).mock.instances[0];
-      expect(instance.extractAllTo).toHaveBeenCalledExactlyOnceWith(
-        join(STORAGE_PATH_MOCK, 'dummy'), true,
-      );
-    });
+        expect(vi.mocked(AdmZip).mock.instances).toHaveLength(1);
+        const instance = vi.mocked(AdmZip).mock.instances[0];
+        expect(instance.extractAllTo).toHaveBeenCalledExactlyOnceWith(join(STORAGE_PATH_MOCK, 'dummy'), true);
+      },
+    );
 
-    test('expect tar to be untar', async () => {
-      await installer.doInstall(LOGGER_MOCK);
+    test(
+      'expect tar to be untar',
+      {
+        skip: nodePlatform === 'win32',
+      },
+      async () => {
+        await installer.doInstall(LOGGER_MOCK);
 
-    });
+        expect(tar.x).toHaveBeenCalledExactlyOnceWith('?');
+      },
+    );
   });
 });
 
