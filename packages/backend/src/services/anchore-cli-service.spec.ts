@@ -123,7 +123,7 @@ const LIST_RELEASE_ASSETS: Endpoints['GET /repos/{owner}/{repo}/releases/{releas
   },
   {
     id: 1,
-    name: 'dummy_1.0.0_darwin_amd64.tar.gz',
+    name: 'dummy_1.0.0_darwin_arm64.tar.gz',
   },
 ] as unknown as Endpoints['GET /repos/{owner}/{repo}/releases/{release_id}/assets']['response']['data'];
 
