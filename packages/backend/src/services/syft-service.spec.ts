@@ -18,16 +18,8 @@
 
 import { test, vi, beforeEach, describe, expect, assert } from 'vitest';
 import { SyftService } from '/@/services/syft-service';
-import type {
-  ExtensionContext, CliTool,
-  ImageInfo} from '@podman-desktop/api';
-import {
-  cli as cliApi,
-  containerEngine,
-  ProgressLocation,
-  process,
-  window as windowApi,
-} from '@podman-desktop/api';
+import type { ExtensionContext, CliTool, ImageInfo } from '@podman-desktop/api';
+import { cli as cliApi, containerEngine, ProgressLocation, process, window as windowApi } from '@podman-desktop/api';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { Octokit } from '@octokit/rest';
@@ -126,11 +118,14 @@ describe('SyftService#analyse', () => {
   test('should create a task', async () => {
     await syft.analyse(IMAGE_INFO_MOCK);
 
-    expect(windowApi.withProgress).toHaveBeenCalledExactlyOnceWith({
-      cancellable: true,
-      location: ProgressLocation.TASK_WIDGET,
-      title: 'Analysing image foo',
-    }, expect.any(Function));
+    expect(windowApi.withProgress).toHaveBeenCalledExactlyOnceWith(
+      {
+        cancellable: true,
+        location: ProgressLocation.TASK_WIDGET,
+        title: 'Analysing image foo',
+      },
+      expect.any(Function),
+    );
   });
 
   test('scan task should save image and execute syft', async () => {
@@ -162,4 +157,3 @@ describe('SyftService#analyse', () => {
     expect(rename).toHaveBeenCalledExactlyOnceWith(tmp, dest);
   });
 });
-
