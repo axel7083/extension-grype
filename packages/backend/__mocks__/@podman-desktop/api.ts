@@ -75,12 +75,15 @@ const plugin = {
   } as unknown as typeof podmanDesktopApi.cli,
   window: {
     showQuickPick: vi.fn(),
+    withProgress: vi.fn(),
   } as unknown as typeof podmanDesktopApi.window,
   navigation: {} as unknown as typeof podmanDesktopApi.navigation,
   commands: {} as unknown as typeof podmanDesktopApi.commands,
   extensions: {} as unknown as typeof podmanDesktopApi.extensions,
   provider: {} as unknown as typeof podmanDesktopApi.provider,
-  containerEngine: {} as unknown as typeof podmanDesktopApi.containerEngine,
+  containerEngine: {
+    saveImage: vi.fn(),
+  } as unknown as typeof podmanDesktopApi.containerEngine,
   configuration: {} as unknown as typeof podmanDesktopApi.configuration,
   authentication: {} as unknown as typeof podmanDesktopApi.authentication,
   context: {} as unknown as typeof podmanDesktopApi.context,
