@@ -15,22 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { ExtensionContext } from '@podman-desktop/api';
-import type { AsyncInit } from '/@/utils/async-init';
-import { InversifyBinding } from '/@/inject/inversify-binding';
-import type { IAsyncDisposable } from '/@/utils/async-disposable';
 
-export class MainService implements IAsyncDisposable, AsyncInit<ExtensionContext> {
-  #inversify: InversifyBinding | undefined;
-
-  constructor() {}
-
-  async init(context: ExtensionContext): Promise<void> {
-    this.#inversify = new InversifyBinding(context);
-    await this.#inversify.init();
-  }
-
-  async asyncDispose(): Promise<void> {
-    return this.#inversify?.asyncDispose();
-  }
-}
+export const ExtensionContextSymbol = Symbol.for('ExtensionContext');
+export const StartupSymbol = Symbol('StartupSymbol');

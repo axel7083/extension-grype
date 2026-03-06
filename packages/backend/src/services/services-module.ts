@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2026 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,19 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { ExtensionContext } from '@podman-desktop/api';
-import type { AsyncInit } from '/@/utils/async-init';
-import { InversifyBinding } from '/@/inject/inversify-binding';
-import type { IAsyncDisposable } from '/@/utils/async-disposable';
 
-export class MainService implements IAsyncDisposable, AsyncInit<ExtensionContext> {
-  #inversify: InversifyBinding | undefined;
+import { ContainerModule } from 'inversify';
+import { SyftService } from '/@/services/syft-service';
+import { GrypeService } from '/@/services/grype-service';
+import { StartupSymbol } from '/@/inject/symbol';
 
-  constructor() {}
+const servicesModule = new ContainerModule(options => {
+  options.bind<SyftService>(SyftService).toSelf().inSingletonScope();
+  options.bind<GrypeService>(GrypeService).toSelf().inSingletonScope();
 
-  async init(context: ExtensionContext): Promise<void> {
-    this.#inversify = new InversifyBinding(context);
-    await this.#inversify.init();
-  }
+  // mark it as a startup service
+  options.bind(StartupSymbol).toService(GrypeService);
+  options.bind(StartupSymbol).toService(SyftService);
+});
 
-  async asyncDispose(): Promise<void> {
-    return this.#inversify?.asyncDispose();
-  }
-}
+export { servicesModule };

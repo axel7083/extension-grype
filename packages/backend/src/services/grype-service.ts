@@ -16,12 +16,33 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Disposable } from '@podman-desktop/api';
-import { AnchoreCliService, type BaseCliDependencies } from './anchore-cli-service';
+import type { ExtensionContext } from '@podman-desktop/api';
+import { AnchoreCliService } from '/@/services/anchore-cli-service';
+import { Octokit } from '@octokit/rest';
+import { ExtensionContextSymbol } from '/@/inject/symbol';
+import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
-type Dependencies = BaseCliDependencies;
+@injectable()
+export class GrypeService extends AnchoreCliService {
+  constructor(
+    @inject(Octokit)
+    octokit: Octokit,
+    @inject(ExtensionContextSymbol)
+    context: ExtensionContext,
+  ) {
+    super(octokit, context);
+  }
 
-export class GrypeService extends AnchoreCliService<Dependencies> implements Disposable {
+  @postConstruct()
+  override async init(): Promise<void> {
+    return super.init();
+  }
+
+  @preDestroy()
+  override dispose(): void {
+    super.dispose();
+  }
+
   protected override get icon(): string {
     return 'icon.png';
   }

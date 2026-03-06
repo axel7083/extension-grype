@@ -16,18 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { test, vi, beforeEach, expect, assert } from 'vitest';
-import { MainService } from './main-service';
-import type { ExtensionContext, Disposable } from '@podman-desktop/api';
+import { test, vi, beforeEach, expect } from 'vitest';
+import { MainService } from '/@/services/main-service';
+import type { ExtensionContext } from '@podman-desktop/api';
 
-import { SyftService } from './syft-service';
-import { GrypeService } from './grype-service';
-import type { AsyncInit } from '../utils/async-init';
-import { Octokit } from '@octokit/rest';
+import { InversifyBinding } from '/@/inject/inversify-binding';
 
-vi.mock(import('./syft-service'));
-vi.mock(import('./grype-service'));
-vi.mock(import('@octokit/rest'));
+vi.mock(import('/@/inject/inversify-binding'));
 
 const EXTENSION_CONTEXT_MOCK: ExtensionContext = {} as unknown as ExtensionContext;
 
@@ -39,39 +34,18 @@ beforeEach(() => {
   main = new MainService();
 });
 
-test('octokit request signal should be aborted after Main#dispose', async () => {
+test('expect MainService#init to init InversifyBinding', async () => {
   await main.init(EXTENSION_CONTEXT_MOCK);
 
-  expect(Octokit).toHaveBeenLastCalledWith({
-    request: {
-      signal: expect.any(AbortSignal),
-    },
-  });
-
-  const options = vi.mocked(Octokit).mock.calls[0][0];
-  assert(options?.request?.signal);
-
-  expect(options.request.signal.aborted).toBeFalsy();
-
-  main.dispose();
-  expect(options.request.signal.aborted).toBeTruthy();
+  expect(InversifyBinding.prototype.init).toHaveBeenCalledOnce();
 });
 
-test.each<{ prototype: AsyncInit & Disposable; name: string }>([
-  {
-    prototype: SyftService.prototype,
-    name: SyftService.name,
-  },
-  {
-    prototype: GrypeService.prototype,
-    name: GrypeService.name,
-  },
-])('expect $name to be init on Main#init and dispose on Main#dispose', async ({ prototype }) => {
+test('expect MainService#asyncDispose to dispose InversifyBinding', async () => {
   await main.init(EXTENSION_CONTEXT_MOCK);
 
-  expect(prototype.init).toHaveBeenCalledOnce();
-  expect(prototype.dispose).not.toHaveBeenCalled();
+  expect(InversifyBinding.prototype.asyncDispose).not.toHaveBeenCalled();
 
-  main.dispose();
-  expect(prototype.dispose).toHaveBeenCalledOnce();
+  await main.asyncDispose();
+
+  expect(InversifyBinding.prototype.asyncDispose).toHaveBeenCalledOnce();
 });

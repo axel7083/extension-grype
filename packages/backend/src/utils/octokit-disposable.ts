@@ -15,22 +15,27 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { ExtensionContext } from '@podman-desktop/api';
-import type { AsyncInit } from '/@/utils/async-init';
-import { InversifyBinding } from '/@/inject/inversify-binding';
-import type { IAsyncDisposable } from '/@/utils/async-disposable';
+import { Octokit } from '@octokit/rest';
+import type { Disposable } from '@podman-desktop/api';
+import { injectable, preDestroy } from 'inversify';
 
-export class MainService implements IAsyncDisposable, AsyncInit<ExtensionContext> {
-  #inversify: InversifyBinding | undefined;
+@injectable()
+export class OctokitDisposable extends Octokit implements Disposable {
+  #abortController: AbortController | undefined;
 
-  constructor() {}
-
-  async init(context: ExtensionContext): Promise<void> {
-    this.#inversify = new InversifyBinding(context);
-    await this.#inversify.init();
+  constructor() {
+    const abortController = new AbortController();
+    super({
+      request: {
+        signal: abortController.signal,
+      },
+    });
+    this.#abortController = abortController;
   }
 
-  async asyncDispose(): Promise<void> {
-    return this.#inversify?.asyncDispose();
+  @preDestroy()
+  dispose(): void {
+    this.#abortController?.abort('disposing octokit');
+    this.#abortController = undefined;
   }
 }

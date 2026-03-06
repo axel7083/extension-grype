@@ -17,17 +17,12 @@
  ***********************************************************************/
 
 import { test, vi, beforeEach, expect, describe } from 'vitest';
-import {
-  ANCHORE_GITHUB_ORG,
-  AnchoreCliService,
-  type BaseCliDependencies,
-  type GithubReleaseMetadata,
-} from './anchore-cli-service';
+import { ANCHORE_GITHUB_ORG, AnchoreCliService, type GithubReleaseMetadata } from '/@/services/anchore-cli-service';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { Octokit } from '@octokit/rest';
 import { cli as cliApi, process as processApi, window as windowApi } from '@podman-desktop/api';
-import type { CliToolInstaller, CliTool, Logger } from '@podman-desktop/api';
+import type { CliToolInstaller, CliTool, Logger, ExtensionContext } from '@podman-desktop/api';
 import type { Endpoints } from '@octokit/types';
 import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
@@ -47,7 +42,9 @@ vi.mock(import('adm-zip'), () => ({
 }));
 vi.mock(import('tar'));
 
-const STORAGE_PATH_MOCK: string = join(tmpdir());
+const EXTENSION_CONTEXT_MOCK: ExtensionContext = {
+  storagePath: join(tmpdir()),
+} as unknown as ExtensionContext;
 const OCTOKIT_MOCK: Octokit = {
   repos: {
     listReleases: vi.fn(),
@@ -56,7 +53,7 @@ const OCTOKIT_MOCK: Octokit = {
   },
 } as unknown as Octokit;
 
-class TestCli extends AnchoreCliService<BaseCliDependencies> {
+class TestCli extends AnchoreCliService {
   public override get icon(): string {
     return 'dummy.png';
   }
@@ -135,10 +132,7 @@ let cli: TestCli;
 beforeEach(() => {
   vi.resetAllMocks();
 
-  cli = new TestCli({
-    octokit: OCTOKIT_MOCK,
-    storagePath: STORAGE_PATH_MOCK,
-  });
+  cli = new TestCli(OCTOKIT_MOCK, EXTENSION_CONTEXT_MOCK);
 
   // mock fs
   vi.mocked(rm).mockResolvedValue(undefined);
@@ -193,7 +187,7 @@ describe('TestCli#init', () => {
     await cli.init();
     expect(cliApi.createCliTool).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({
-        path: join(STORAGE_PATH_MOCK, 'dummy', 'dummy'),
+        path: join(EXTENSION_CONTEXT_MOCK.storagePath, cli.toolId, 'dummy'),
         version: '1.41.2',
       }),
     );
@@ -280,7 +274,10 @@ describe('installer', () => {
 
         expect(vi.mocked(AdmZip).mock.instances).toHaveLength(1);
         const instance = vi.mocked(AdmZip).mock.instances[0];
-        expect(instance.extractAllTo).toHaveBeenCalledExactlyOnceWith(join(STORAGE_PATH_MOCK, 'dummy'), true);
+        expect(instance.extractAllTo).toHaveBeenCalledExactlyOnceWith(
+          join(EXTENSION_CONTEXT_MOCK.storagePath, cli.toolId),
+          true,
+        );
       },
     );
 
@@ -292,7 +289,10 @@ describe('installer', () => {
       async () => {
         await installer.doInstall(LOGGER_MOCK);
 
-        expect(tar.x).toHaveBeenCalledExactlyOnceWith('?');
+        expect(tar.x).toHaveBeenCalledExactlyOnceWith({
+          file: expect.stringContaining('tar.gz'),
+          cwd: join(EXTENSION_CONTEXT_MOCK.storagePath, cli.toolId),
+        });
       },
     );
   });

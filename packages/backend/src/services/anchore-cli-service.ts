@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { CliTool, Disposable, Logger, QuickPickItem } from '@podman-desktop/api';
+import type { CliTool, Disposable, ExtensionContext, Logger, QuickPickItem } from '@podman-desktop/api';
 import { cli as cliApi, env as envApi, process as processApi, window as windowApi } from '@podman-desktop/api';
-import type { AsyncInit } from '../utils/async-init';
+import type { AsyncInit } from '/@/utils/async-init';
 import type { Octokit } from '@octokit/rest';
 import { arch as nodeArch, platform as nodePlatform } from 'node:process';
 import { join } from 'node:path';
@@ -27,11 +27,6 @@ import * as tar from 'tar';
 import { chmod, mkdir, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
-export interface BaseCliDependencies {
-  octokit: Octokit;
-  storagePath: string;
-}
-
 export interface GithubReleaseMetadata extends QuickPickItem {
   tag: string;
   id: number;
@@ -39,10 +34,13 @@ export interface GithubReleaseMetadata extends QuickPickItem {
 
 export const ANCHORE_GITHUB_ORG = 'anchore';
 
-export abstract class AnchoreCliService<D extends BaseCliDependencies> implements Disposable, AsyncInit {
+export abstract class AnchoreCliService implements Disposable, AsyncInit {
   protected cliTool?: CliTool;
 
-  constructor(protected dependencies: D) {}
+  constructor(
+    protected octokit: Octokit,
+    protected context: ExtensionContext,
+  ) {}
 
   // Abstracts to be provided by concrete tools
   protected abstract get toolId(): string; // e.g. 'syft' | 'grype'
@@ -52,7 +50,7 @@ export abstract class AnchoreCliService<D extends BaseCliDependencies> implement
   protected abstract get icon(): string;
 
   protected get storageDir(): string {
-    return join(this.dependencies.storagePath, this.toolId);
+    return join(this.context.storagePath, this.toolId);
   }
 
   protected get binaryBaseName(): string {
@@ -139,7 +137,7 @@ export abstract class AnchoreCliService<D extends BaseCliDependencies> implement
   }
 
   protected async listReleases(limits = 10): Promise<GithubReleaseMetadata[]> {
-    const lastReleases = await this.dependencies.octokit.repos.listReleases({
+    const lastReleases = await this.octokit.repos.listReleases({
       owner: ANCHORE_GITHUB_ORG,
       repo: this.repoName,
     });
@@ -184,7 +182,7 @@ export abstract class AnchoreCliService<D extends BaseCliDependencies> implement
   }
 
   protected async download(release: GithubReleaseMetadata): Promise<string> {
-    const { data } = await this.dependencies.octokit.repos.listReleaseAssets({
+    const { data } = await this.octokit.repos.listReleaseAssets({
       owner: ANCHORE_GITHUB_ORG,
       repo: this.repoName,
       release_id: release.id,
@@ -195,7 +193,7 @@ export abstract class AnchoreCliService<D extends BaseCliDependencies> implement
     const asset = data.find(a => assetName === a.name);
     if (!asset) throw new Error(`asset ${assetName} not found`);
 
-    const response = await this.dependencies.octokit.repos.getReleaseAsset({
+    const response = await this.octokit.repos.getReleaseAsset({
       owner: ANCHORE_GITHUB_ORG,
       repo: this.repoName,
       asset_id: asset.id,
