@@ -52,12 +52,32 @@ jobs:
     steps:
       - name: Create report markdown
         run: |
-          echo "### OCI Preview Image" > /tmp/report.md
-          echo "" >> /tmp/report.md
-          echo "\`${{ needs.build-publish.outputs.image-with-tag }}\`" >> /tmp/report.md
+          cat <<EOF > report.md
+          ### OCI Preview Image
 
-      - uses: dtinth/markdown-report-action@v1
-        with:
-          name: PR OCI Image
-          title: OCI Preview image
-          body-file: /tmp/report.md
+          \`${{ needs.build-publish.outputs.image-with-tag }}\`
+          EOF
+
+      - name: Publish check run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          IMAGE: ${{ needs.build-publish.outputs.image-with-tag }}
+        run: |
+          ruby <<'EOF' | gh api repos/${{ github.repository }}/check-runs -X POST --input -
+          require "json"
+
+          report = {
+            name: "OCI Preview Image",
+            head_sha: ENV["HEAD_SHA"],
+            status: "completed",
+            conclusion: "success",
+            output: {
+              title: "Preview Image",
+              summary: "OCI preview image built successfully.",
+              text: "```\n#{ENV["IMAGE"]}\n```"
+            }
+          }
+
+          puts JSON.generate(report)
+          EOF
