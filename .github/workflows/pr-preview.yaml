@@ -35,7 +35,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: ./.github/workflows/oci-build.yaml
+    uses: .github/workflows/oci-build.yaml
     if: ${{ github.event.workflow_run.pull_requests[0] != null }}
     with:
       ref: ${{ github.event.workflow_run.head_sha }}
@@ -43,3 +43,19 @@ jobs:
       tags: ${{ github.event.workflow_run.pull_requests[0].number }}
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
+
+  report:
+    needs: build-publish
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Create report markdown
+        run: |
+          echo "### OCI Preview Image" > /tmp/report.md
+          echo "" >> /tmp/report.md
+          echo "\`${{ needs.build-publish.outputs.image-with-tag }}\`" >> /tmp/report.md
+
+      - uses: dtinth/markdown-report-action@v1
+        with:
+          name: PR OCI Image
+          title: OCI Preview image
+          body-file: /tmp/report.md
