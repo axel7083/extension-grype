@@ -88,7 +88,9 @@ const plugin = {
   authentication: {} as unknown as typeof podmanDesktopApi.authentication,
   context: {} as unknown as typeof podmanDesktopApi.context,
   fs: {} as unknown as typeof podmanDesktopApi.fs,
-  imageChecker: {} as unknown as typeof podmanDesktopApi.imageChecker,
+  imageChecker: {
+    registerImageCheckerProvider: vi.fn(),
+  } as unknown as typeof podmanDesktopApi.imageChecker,
   kubernetes: {} as unknown as typeof podmanDesktopApi.kubernetes,
   proxy: {} as unknown as typeof podmanDesktopApi.proxy,
   net: {} as unknown as typeof podmanDesktopApi.net,
