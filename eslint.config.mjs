@@ -43,7 +43,7 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
-const TYPESCRIPT_PROJECTS = ['packages/*/tsconfig.json', 'tests/*/tsconfig.json', 'tsconfig.json'];
+const TYPESCRIPT_PROJECTS = ['packages/*/tsconfig.json', 'tests/*/tsconfig.json', 'tsconfig.vite.json'];
 
 export default [
   {
