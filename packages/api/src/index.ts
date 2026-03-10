@@ -15,8 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type * as syft from '/@generated/syft-schema';
-import * as grype from '/@/schemas/grype';
+import type * as syft from './generated/syft-schema';
+import * as grype from './schemas/grype';
 import type { CancellationToken, ImageInfo } from '@podman-desktop/api';
 
 export interface GrypeExtensionApi {
