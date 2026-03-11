@@ -29,6 +29,7 @@ export default defineConfig({
   plugins: [
     syftJSONSchema(),
     dts({
+      copyDtsFiles: true,
       root: PACKAGE_ROOT,
       tsconfigPath: join(PACKAGE_ROOT, 'tsconfig.json'),
     }),
