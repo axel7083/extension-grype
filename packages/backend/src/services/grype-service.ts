@@ -31,7 +31,7 @@ import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import * as grype from '/@/schemas/grype';
+import { grype } from '@podman-desktop/grype-extension-api';
 
 @injectable()
 export class GrypeService extends AnchoreCliService {
