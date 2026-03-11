@@ -15,5 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-// export syft
+// export syft & grype
 export type * as syft from './generated/syft-schema';
+export * as grype from './schemas/grype';

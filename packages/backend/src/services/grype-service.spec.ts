@@ -24,7 +24,7 @@ import { tmpdir } from 'node:os';
 import type { Octokit } from '@octokit/rest';
 import { existsSync } from 'node:fs';
 import { GrypeService } from '/@/services/grype-service';
-import type * as grype from '/@/schemas/grype';
+import type { grype } from '@podman-desktop/grype-extension-api';
 import { readFile } from 'node:fs/promises';
 
 vi.mock(import('node:fs'));
