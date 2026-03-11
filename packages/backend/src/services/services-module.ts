@@ -21,11 +21,13 @@ import { SyftService } from '/@/services/syft-service';
 import { GrypeService } from '/@/services/grype-service';
 import { StartupSymbol } from '/@/inject/symbol';
 import { ImageCheckerProvider } from '/@/services/image-checker-provider';
+import { CacheService } from '/@/services/cache-service';
 
 const servicesModule = new ContainerModule(options => {
   options.bind<SyftService>(SyftService).toSelf().inSingletonScope();
   options.bind<GrypeService>(GrypeService).toSelf().inSingletonScope();
   options.bind<ImageCheckerProvider>(ImageCheckerProvider).toSelf().inSingletonScope();
+  options.bind<CacheService>(CacheService).toSelf().inSingletonScope();
 
   // mark it as a startup service
   options.bind(StartupSymbol).toService(GrypeService);

@@ -25,6 +25,7 @@ import { tmpdir } from 'node:os';
 import type { Octokit } from '@octokit/rest';
 import { existsSync } from 'node:fs';
 import { mkdtempDisposable, rename } from 'node:fs/promises';
+import type { CacheService } from '/@/services/cache-service';
 
 vi.mock(import('node:fs'));
 vi.mock(import('node:fs/promises'));
@@ -79,6 +80,9 @@ const CLI_TOOL_MOCK: CliTool = {
   state: 'registered',
   dispose: vi.fn(),
 };
+const CACHE_SERVICE_MOCK: CacheService = {
+  getCacheDirectory: vi.fn(),
+} as unknown as CacheService;
 
 let syft: SyftService;
 
@@ -86,8 +90,9 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(cliApi.createCliTool).mockReturnValue(CLI_TOOL_MOCK);
-  syft = new SyftService(OCTOKIT_MOCK, EXTENSION_CONTEXT_MOCK);
+  syft = new SyftService(OCTOKIT_MOCK, EXTENSION_CONTEXT_MOCK, CACHE_SERVICE_MOCK);
 
+  vi.mocked(CACHE_SERVICE_MOCK.getCacheDirectory).mockReturnValue(join(EXTENSION_CONTEXT_MOCK.storagePath, 'cache'));
   vi.mocked(mkdtempDisposable).mockResolvedValue({
     path: tmpdir(),
     remove: vi.fn(),
@@ -104,7 +109,7 @@ describe('SyftService#analyse', () => {
     vi.mocked(existsSync).mockReturnValue(true);
 
     const expected = join(
-      EXTENSION_CONTEXT_MOCK.storagePath,
+      CACHE_SERVICE_MOCK.getCacheDirectory(),
       IMAGE_INFO_MOCK.engineId,
       `${IMAGE_INFO_MOCK.Id}.syft.json`,
     );
@@ -145,7 +150,7 @@ describe('SyftService#analyse', () => {
 
     expect(mkdtempDisposable).toHaveBeenCalledExactlyOnceWith(join(tmpdir(), IMAGE_INFO_MOCK.engineId));
 
-    const dest = join(tmpdir(), IMAGE_INFO_MOCK.engineId, 'foo.syft.json');
+    const dest = join(CACHE_SERVICE_MOCK.getCacheDirectory(), IMAGE_INFO_MOCK.engineId, 'foo.syft.json');
     const tmp = `${dest}.tmp`;
 
     expect(process.exec).toHaveBeenCalledExactlyOnceWith(

@@ -33,6 +33,7 @@ import { mkdir, mkdtempDisposable, rename } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { CacheService } from '/@/services/cache-service';
 
 @injectable()
 export class SyftService extends AnchoreCliService {
@@ -41,6 +42,8 @@ export class SyftService extends AnchoreCliService {
     octokit: Octokit,
     @inject(ExtensionContextSymbol)
     context: ExtensionContext,
+    @inject(CacheService)
+    protected readonly cache: CacheService,
   ) {
     super(octokit, context);
   }
@@ -98,7 +101,7 @@ export class SyftService extends AnchoreCliService {
 
     const imageId = this.sanitizeImageId(image.Id);
 
-    const destination = join(this.context.storagePath, image.engineId, `${imageId}.syft.json`);
+    const destination = join(this.cache.getCacheDirectory(), image.engineId, `${imageId}.syft.json`);
 
     // shortcut everything if we have already done the scanning
     if (existsSync(destination)) {
