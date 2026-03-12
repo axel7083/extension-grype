@@ -112,6 +112,9 @@ jobs:
 
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/api/package.json
 
+      - name: Build Packages
+        run: pnpm run build
+
       - name: Publish Extension API to npmjs
         working-directory: packages/api
         run: pnpm run publish:next ${{ needs.prepare-version.outputs.dist-tag }}
