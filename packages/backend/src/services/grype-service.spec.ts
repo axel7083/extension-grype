@@ -17,14 +17,14 @@
  ***********************************************************************/
 
 import { test, vi, beforeEach, describe, expect, assert } from 'vitest';
-import type { ExtensionContext, CliTool} from '@podman-desktop/api';
-import { window , cli as cliApi, ProgressLocation, process, window as windowApi } from '@podman-desktop/api';
+import type { ExtensionContext, CliTool } from '@podman-desktop/api';
+import { window, cli as cliApi, ProgressLocation, process, window as windowApi } from '@podman-desktop/api';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { Octokit } from '@octokit/rest';
 import type { Stats } from 'node:fs';
 import { existsSync } from 'node:fs';
-import { GrypeService , MAX_CACHE_AGE } from '/@/services/grype-service';
+import { GrypeService, MAX_CACHE_AGE } from '/@/services/grype-service';
 import type { grype } from '@podman-desktop/grype-extension-api';
 import { readFile, rename, stat } from 'node:fs/promises';
 
