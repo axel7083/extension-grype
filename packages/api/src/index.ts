@@ -17,12 +17,12 @@
  ***********************************************************************/
 import * as grype from './schemas/grype';
 import * as syft from './schemas/syft';
-import type { CancellationToken, ImageInfo } from '@podman-desktop/api';
+import type { CancellationToken } from '@podman-desktop/api';
 
 export interface GrypeExtensionApi {
   sbom: {
     analyse(
-      image: ImageInfo,
+      image: { engineId: string; Id: string },
       options?: {
         token?: CancellationToken;
       },
@@ -31,7 +31,7 @@ export interface GrypeExtensionApi {
 
   vulnerability: {
     analyse(
-      image: ImageInfo,
+      image: { engineId: string; Id: string },
       options?: {
         token?: CancellationToken;
       },

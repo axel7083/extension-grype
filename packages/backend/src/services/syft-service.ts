@@ -18,7 +18,6 @@
 import {
   containerEngine,
   ExtensionContext,
-  ImageInfo,
   ProgressLocation,
   window,
   process,
@@ -82,7 +81,7 @@ export class SyftService extends AnchoreCliService {
   }
 
   public async analyse(
-    image: ImageInfo,
+    image: { engineId: string; Id: string },
     options?: {
       token?: CancellationToken;
     },
@@ -108,7 +107,7 @@ export class SyftService extends AnchoreCliService {
       return destination;
     }
 
-    const imageName = image.RepoTags?.[0] ?? image.Id;
+    const imageName = image.Id;
     return window.withProgress(
       {
         location: ProgressLocation.TASK_WIDGET,
