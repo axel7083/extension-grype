@@ -82,7 +82,7 @@ export class GrypeService extends AnchoreCliService {
     sbom: string,
     options?: {
       token?: CancellationToken;
-      task?: { title?: string; }
+      task?: { title?: string };
     },
   ): Promise<grype.Document> {
     if (!this.cliTool?.version || !this.cliTool.path)

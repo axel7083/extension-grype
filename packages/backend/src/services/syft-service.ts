@@ -84,7 +84,7 @@ export class SyftService extends AnchoreCliService {
     image: { engineId: string; Id: string },
     options?: {
       token?: CancellationToken;
-      task?: { title?: string; }
+      task?: { title?: string };
     },
   ): Promise<string> {
     if (!this.cliTool?.version || !this.cliTool.path)
