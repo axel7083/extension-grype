@@ -29,6 +29,7 @@ import { rm } from 'node:fs/promises';
 import AdmZip from 'adm-zip';
 import * as tar from 'tar';
 import { platform as nodePlatform } from 'node:process';
+import { TELEMETRY_EVENTS } from '/@/utils/telemetry';
 
 vi.mock(import('node:fs'));
 vi.mock(import('node:fs/promises'));
@@ -301,6 +302,32 @@ describe('installer', () => {
         });
       },
     );
+
+    test('expect telemetry to be sent', async () => {
+      await installer.doInstall(LOGGER_MOCK);
+
+      expect(TELEMETRY_LOGGER_MOCK.logUsage).toHaveBeenCalledExactlyOnceWith(TELEMETRY_EVENTS.CLI_INSTALL, {
+        duration: expect.any(Number),
+        tag: LIST_RELEASES[0].tag_name,
+        toolId: cli.toolId,
+      });
+    });
+
+    test('expect error to be included in telemetry', async () => {
+      const HTTP_ERROR_MOCK = new Error('dummy http error');
+      vi.mocked(OCTOKIT_MOCK.repos.listReleaseAssets).mockRejectedValue(HTTP_ERROR_MOCK);
+
+      await expect(async () => {
+        await installer.doInstall(LOGGER_MOCK);
+      }).rejects.toThrowError(HTTP_ERROR_MOCK);
+
+      expect(TELEMETRY_LOGGER_MOCK.logUsage).toHaveBeenCalledExactlyOnceWith(
+        TELEMETRY_EVENTS.CLI_INSTALL,
+        expect.objectContaining({
+          error: HTTP_ERROR_MOCK,
+        }),
+      );
+    });
   });
 });
 

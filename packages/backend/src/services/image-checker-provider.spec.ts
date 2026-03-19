@@ -29,6 +29,7 @@ import type {
   TelemetryLogger,
 } from '@podman-desktop/api';
 import { imageChecker } from '@podman-desktop/api';
+import { TELEMETRY_EVENTS } from '/@/utils/telemetry';
 
 vi.mock(import('./syft-service'));
 vi.mock(import('./grype-service'));
@@ -144,6 +145,16 @@ describe('check', () => {
           markdownDescription: 'Vulnerability description',
         },
       ],
+    });
+
+    expect(TELEMETRY_LOGGER_MOCK.logUsage).toHaveBeenCalledExactlyOnceWith(TELEMETRY_EVENTS.IMAGE_CHECKER, {
+      duration: expect.any(Number),
+      'vulnerabilities-critical': 0,
+      'vulnerabilities-high': 1,
+      'vulnerabilities-low': 0,
+      'vulnerabilities-medium': 0,
+      'vulnerabilities-total': 1,
+      'vulnerabilities-unknown': 0,
     });
   });
 });

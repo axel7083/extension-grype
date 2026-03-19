@@ -23,6 +23,7 @@ import { commands, ProgressLocation, window } from '@podman-desktop/api';
 import { contributes } from '../../package.json';
 import { rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { TELEMETRY_EVENTS } from '/@/utils/telemetry';
 
 vi.mock(import('node:fs'));
 vi.mock(import('node:fs/promises'));
@@ -95,5 +96,11 @@ describe('grype:clear-cache command', () => {
     await listener();
 
     expect(rm).toHaveBeenCalledExactlyOnceWith(cache.getCacheDirectory(), { recursive: true });
+  });
+
+  test('expect telemetry event', async () => {
+    await listener();
+
+    expect(TELEMETRY_LOGGER_MOCK.logUsage).toHaveBeenCalledExactlyOnceWith(TELEMETRY_EVENTS.CACHE_CLEARED);
   });
 });

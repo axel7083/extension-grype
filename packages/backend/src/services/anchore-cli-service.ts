@@ -145,6 +145,7 @@ export abstract class AnchoreCliService implements Disposable, AsyncInit {
           }
         } catch (err: unknown) {
           telemetry['error'] = err;
+          throw err;
         } finally {
           telemetry['duration'] = performance.now() - start;
           this.telemetryLogger.logUsage(TELEMETRY_EVENTS.CLI_INSTALL, telemetry);
