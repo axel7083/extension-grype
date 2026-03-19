@@ -13,5 +13,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: daily
+      interval: "daily"
+      # check at 3am UTC
+      time: "03:00"
     open-pull-requests-limit: 10
