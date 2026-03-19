@@ -22,7 +22,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { Octokit } from '@octokit/rest';
 import { cli as cliApi, process as processApi, window as windowApi } from '@podman-desktop/api';
-import type { CliToolInstaller, CliTool, Logger, ExtensionContext } from '@podman-desktop/api';
+import type { CliToolInstaller, CliTool, Logger, ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
 import type { Endpoints } from '@octokit/types';
 import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
@@ -52,6 +52,12 @@ const OCTOKIT_MOCK: Octokit = {
     getReleaseAsset: vi.fn(),
   },
 } as unknown as Octokit;
+
+const TELEMETRY_LOGGER_MOCK: TelemetryLogger = {
+  logUsage: vi.fn(),
+  logError: vi.fn(),
+  dispose: vi.fn(),
+} as unknown as TelemetryLogger;
 
 class TestCli extends AnchoreCliService {
   public override get icon(): string {
@@ -132,7 +138,7 @@ let cli: TestCli;
 beforeEach(() => {
   vi.resetAllMocks();
 
-  cli = new TestCli(OCTOKIT_MOCK, EXTENSION_CONTEXT_MOCK);
+  cli = new TestCli(OCTOKIT_MOCK, EXTENSION_CONTEXT_MOCK, TELEMETRY_LOGGER_MOCK);
 
   // mock fs
   vi.mocked(rm).mockResolvedValue(undefined);

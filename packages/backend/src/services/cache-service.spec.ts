@@ -18,7 +18,7 @@
 
 import { test, vi, beforeEach, expect, describe, assert } from 'vitest';
 import { CacheService } from '/@/services/cache-service';
-import type { CancellationToken, ExtensionContext } from '@podman-desktop/api';
+import type { CancellationToken, ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
 import { commands, ProgressLocation, window } from '@podman-desktop/api';
 import { contributes } from '../../package.json';
 import { rm } from 'node:fs/promises';
@@ -31,11 +31,18 @@ const EXTENSION_CONTEXT_MOCK: ExtensionContext = {
   storagePath: 'foo',
 } as unknown as ExtensionContext;
 
+const TELEMETRY_LOGGER_MOCK: TelemetryLogger = {
+  logUsage: vi.fn(),
+  logError: vi.fn(),
+  dispose: vi.fn(),
+} as unknown as TelemetryLogger;
+
 let cache: CacheService;
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.withProgress).mockResolvedValue(undefined);
 
-  cache = new CacheService(EXTENSION_CONTEXT_MOCK);
+  cache = new CacheService(EXTENSION_CONTEXT_MOCK, TELEMETRY_LOGGER_MOCK);
 });
 
 test('CacheService#getCacheDirectory', () => {

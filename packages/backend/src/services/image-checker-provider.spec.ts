@@ -20,7 +20,14 @@ import { test, vi, beforeEach, expect, describe, assert } from 'vitest';
 import { ImageCheckerProvider } from './image-checker-provider';
 import type { SyftService } from './syft-service';
 import type { GrypeService } from './grype-service';
-import type { ProviderResult, ImageInfo, Disposable, CancellationToken, ImageChecks } from '@podman-desktop/api';
+import type {
+  ProviderResult,
+  ImageInfo,
+  Disposable,
+  CancellationToken,
+  ImageChecks,
+  TelemetryLogger,
+} from '@podman-desktop/api';
 import { imageChecker } from '@podman-desktop/api';
 
 vi.mock(import('./syft-service'));
@@ -37,11 +44,17 @@ const IMAGE_INFO_MOCK = {
   engineId: 'engine-id',
 } as ImageInfo;
 
+const TELEMETRY_LOGGER_MOCK: TelemetryLogger = {
+  logUsage: vi.fn(),
+  logError: vi.fn(),
+  dispose: vi.fn(),
+} as unknown as TelemetryLogger;
+
 let provider: ImageCheckerProvider;
 beforeEach(() => {
   vi.resetAllMocks();
 
-  provider = new ImageCheckerProvider(SYFT_SERVICE_MOCK, GRYPE_SERVICE_MOCK);
+  provider = new ImageCheckerProvider(SYFT_SERVICE_MOCK, GRYPE_SERVICE_MOCK, TELEMETRY_LOGGER_MOCK);
 });
 
 test('init should register image checker provider', async () => {

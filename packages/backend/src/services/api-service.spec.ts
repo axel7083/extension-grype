@@ -20,7 +20,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApiService } from '/@/services/api-service';
 import type { GrypeService } from '/@/services/grype-service';
 import type { SyftService } from '/@/services/syft-service';
-import type { ImageInfo } from '@podman-desktop/api';
+import type { ImageInfo, TelemetryLogger } from '@podman-desktop/api';
 import { readFile } from 'node:fs/promises';
 import type { syft } from '@podman-desktop/grype-extension-api';
 
@@ -34,12 +34,18 @@ const SYFT_SERVICE_MOCK: SyftService = {
   analyse: vi.fn(),
 } as unknown as SyftService;
 
+const TELEMETRY_LOGGER_MOCK: TelemetryLogger = {
+  logUsage: vi.fn(),
+  logError: vi.fn(),
+  dispose: vi.fn(),
+} as unknown as TelemetryLogger;
+
 describe('ApiService', () => {
   let apiService: ApiService;
 
   beforeEach(() => {
     vi.resetAllMocks();
-    apiService = new ApiService(GRYPE_SERVICE_MOCK, SYFT_SERVICE_MOCK);
+    apiService = new ApiService(GRYPE_SERVICE_MOCK, SYFT_SERVICE_MOCK, TELEMETRY_LOGGER_MOCK);
   });
 
   describe('init', () => {
