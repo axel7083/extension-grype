@@ -87,6 +87,7 @@ const plugin = {
   window: {
     showQuickPick: vi.fn(),
     withProgress: vi.fn(),
+    showInformationMessage: vi.fn(),
   } as unknown as typeof podmanDesktopApi.window,
   navigation: {} as unknown as typeof podmanDesktopApi.navigation,
   commands: {

@@ -15,15 +15,17 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type {
-  Disposable,
-  ImageInfo,
+import {
   CancellationToken,
-  ImageChecks,
+  Disposable,
   ImageCheck,
+  imageChecker,
+  ImageChecks,
+  ImageInfo,
+  ProgressLocation,
   TelemetryLogger,
+  window,
 } from '@podman-desktop/api';
-import { imageChecker } from '@podman-desktop/api';
 import type { AsyncInit } from '../utils/async-init';
 import { SyftService } from './syft-service';
 import { GrypeService } from './grype-service';
@@ -51,6 +53,27 @@ export class ImageCheckerProvider implements Disposable, AsyncInit {
   }
 
   protected async check(image: ImageInfo, token?: CancellationToken): Promise<ImageChecks | undefined> {
+    if (!this.syft.isInstalled() || !this.grype.isInstalled()) {
+      const result = await window.showInformationMessage(
+        'Grype extension requires to install Syft and Grype binaries to scan images, do you want to install them?',
+        'Yes',
+        'Cancel',
+      );
+      if (result !== 'Yes') {
+        throw new Error('user cancelled the installation');
+      }
+
+      await window.withProgress(
+        {
+          location: ProgressLocation.TASK_WIDGET,
+          title: 'Installing Grype binaries',
+        },
+        async () => {
+          await Promise.all([this.syft.install(), this.grype.install()]);
+        },
+      );
+    }
+
     const imageName = image.RepoTags?.[0] ?? image.Id;
     const telemetry: Record<string, unknown> = {};
     const start = performance.now();
