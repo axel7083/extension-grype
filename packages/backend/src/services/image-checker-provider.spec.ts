@@ -28,17 +28,22 @@ import type {
   ImageChecks,
   TelemetryLogger,
 } from '@podman-desktop/api';
-import { imageChecker } from '@podman-desktop/api';
+import { ProgressLocation, window, imageChecker } from '@podman-desktop/api';
 import { TELEMETRY_EVENTS } from '/@/utils/telemetry';
+import type { AnchoreCliService } from '/@/services/anchore-cli-service';
 
 vi.mock(import('./syft-service'));
 vi.mock(import('./grype-service'));
 
 const SYFT_SERVICE_MOCK: SyftService = {
   analyse: vi.fn(),
+  isInstalled: vi.fn(),
+  install: vi.fn(),
 } as unknown as SyftService;
 const GRYPE_SERVICE_MOCK: GrypeService = {
   analyse: vi.fn(),
+  install: vi.fn(),
+  isInstalled: vi.fn(),
 } as unknown as GrypeService;
 const IMAGE_INFO_MOCK = {
   Id: 'image-id',
@@ -56,6 +61,10 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   provider = new ImageCheckerProvider(SYFT_SERVICE_MOCK, GRYPE_SERVICE_MOCK, TELEMETRY_LOGGER_MOCK);
+
+  vi.mocked(SYFT_SERVICE_MOCK.isInstalled).mockReturnValue(true);
+  vi.mocked(GRYPE_SERVICE_MOCK.isInstalled).mockReturnValue(true);
+  vi.mocked(window.showInformationMessage).mockResolvedValue(undefined);
 });
 
 test('init should register image checker provider', async () => {
@@ -156,5 +165,59 @@ describe('check', () => {
       'vulnerabilities-total': 1,
       'vulnerabilities-unknown': 0,
     });
+  });
+
+  test.each<{
+    name: string;
+    service: AnchoreCliService;
+  }>([
+    {
+      name: 'syft',
+      service: SYFT_SERVICE_MOCK,
+    },
+    {
+      name: 'grype',
+      service: GRYPE_SERVICE_MOCK,
+    },
+  ])('$name not installed should prompt user', async ({ service }) => {
+    vi.mocked(service.isInstalled).mockReturnValue(false);
+
+    await expect(async () => {
+      await check(IMAGE_INFO_MOCK);
+    }).rejects.toThrow('user cancelled the installation');
+
+    expect(window.showInformationMessage).toHaveBeenCalledExactlyOnceWith(
+      'Grype extension requires to install Syft and Grype binaries to scan images, do you want to install them?',
+      'Yes',
+      'Cancel',
+    );
+  });
+
+  test('cli not installed should install them on user confirm', async () => {
+    vi.mocked(window.withProgress).mockImplementation((_, fn) => {
+      return fn({ report: vi.fn() }, {} as CancellationToken);
+    });
+
+    vi.mocked(SYFT_SERVICE_MOCK.analyse).mockResolvedValue('sbom-path');
+    vi.mocked(GRYPE_SERVICE_MOCK.analyse).mockResolvedValue({
+      matches: [],
+    });
+
+    vi.mocked(SYFT_SERVICE_MOCK.isInstalled).mockReturnValue(false);
+    // mock user confirm
+    vi.mocked(window.showInformationMessage).mockResolvedValue('Yes');
+
+    await check(IMAGE_INFO_MOCK);
+
+    expect(GRYPE_SERVICE_MOCK.install).toHaveBeenCalledOnce();
+    expect(SYFT_SERVICE_MOCK.install).toHaveBeenCalledOnce();
+
+    expect(window.withProgress).toHaveBeenCalledExactlyOnceWith(
+      {
+        location: ProgressLocation.TASK_WIDGET,
+        title: 'Installing Grype binaries',
+      },
+      expect.any(Function),
+    );
   });
 });

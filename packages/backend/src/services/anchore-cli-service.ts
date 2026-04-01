@@ -64,6 +64,59 @@ export abstract class AnchoreCliService implements Disposable, AsyncInit {
    */
   protected abstract cancelAll(): void;
 
+  public isInstalled(): boolean {
+    return this.cliTool?.version !== undefined;
+  }
+
+  public async install(
+    version?: GithubReleaseMetadata,
+    options?: {
+      logger: Logger;
+    },
+  ): Promise<void> {
+    // skip if already installed
+    if (this.isInstalled()) return;
+
+    let selected: GithubReleaseMetadata;
+    if (version) {
+      selected = version;
+    } else {
+      // Get latest
+      const releases = await this.listReleases();
+      selected = releases[0];
+    }
+
+    const telemetry: Record<string, unknown> = {
+      toolId: this.toolId,
+      tag: selected.tag,
+    };
+    const start = performance.now();
+
+    try {
+      const assetPath = await this.download(selected);
+      options?.logger?.log(`Downloaded ${this.toolId} to ${assetPath}`);
+
+      try {
+        const binPath = await this.extract(assetPath, this.storageDir);
+        options?.logger?.log(`Extracted ${this.toolId} to ${binPath}`);
+
+        this.cliTool?.updateVersion({
+          version: selected.tag.slice(1),
+          path: binPath,
+          installationSource: 'extension',
+        });
+      } finally {
+        await rm(assetPath).catch(() => undefined);
+      }
+    } catch (err: unknown) {
+      telemetry['error'] = err;
+      throw err;
+    } finally {
+      telemetry['duration'] = performance.now() - start;
+      this.telemetryLogger.logUsage(TELEMETRY_EVENTS.CLI_INSTALL, telemetry);
+    }
+  }
+
   protected get storageDir(): string {
     return join(this.context.storagePath, this.toolId);
   }
@@ -131,36 +184,7 @@ export abstract class AnchoreCliService implements Disposable, AsyncInit {
       },
       doInstall: async (logger: Logger) => {
         if (!selected) throw new Error('No version selected');
-
-        const telemetry: Record<string, unknown> = {
-          toolId: this.toolId,
-          tag: selected.tag,
-        };
-        const start = performance.now();
-
-        try {
-          const assetPath = await this.download(selected);
-          logger.log(`Downloaded ${this.toolId} to ${assetPath}`);
-
-          try {
-            const binPath = await this.extract(assetPath, this.storageDir);
-            logger.log(`Extracted ${this.toolId} to ${binPath}`);
-
-            this.cliTool?.updateVersion({
-              version: selected.tag.slice(1),
-              path: binPath,
-              installationSource: 'extension',
-            });
-          } finally {
-            await rm(assetPath).catch(() => undefined);
-          }
-        } catch (err: unknown) {
-          telemetry['error'] = err;
-          throw err;
-        } finally {
-          telemetry['duration'] = performance.now() - start;
-          this.telemetryLogger.logUsage(TELEMETRY_EVENTS.CLI_INSTALL, telemetry);
-        }
+        return this.install(selected, { logger });
       },
       selectVersion: async (_?: boolean) => {
         const current = version; // already resolved above

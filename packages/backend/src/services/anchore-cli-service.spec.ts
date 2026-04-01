@@ -337,6 +337,40 @@ describe('installer', () => {
   });
 });
 
+describe('install', () => {
+  test('calling installer with an already installed binary should do nothing', async () => {
+    CLI_TOOL_MOCK.path = '/foo/bar';
+    CLI_TOOL_MOCK.version = '1.2.3';
+
+    await cli.init();
+
+    await cli.install();
+    expect(OCTOKIT_MOCK.repos.listReleases).not.toHaveBeenCalled();
+  });
+});
+
+describe('isInstalled', () => {
+  test('cli not initialized should be marked as not installed', async () => {
+    expect(cli.isInstalled()).toBeFalsy();
+  });
+
+  test('cli initialized without version should be marked as not installed', async () => {
+    CLI_TOOL_MOCK.path = undefined;
+    CLI_TOOL_MOCK.version = undefined;
+
+    expect(cli.isInstalled()).toBeFalsy();
+  });
+
+  test('cli initialized with corresponding version should be marked as installed', async () => {
+    CLI_TOOL_MOCK.path = '/foo/bar';
+    CLI_TOOL_MOCK.version = '1.2.3';
+
+    await cli.init();
+
+    expect(cli.isInstalled()).toBeTruthy();
+  });
+});
+
 test('TestCli#dispose should dispose CliTool', async () => {
   await cli.init();
 
