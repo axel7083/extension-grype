@@ -219,7 +219,7 @@ describe('installer', () => {
     installer = vi.mocked(CLI_TOOL_MOCK.registerInstaller).mock.calls[0][0];
   });
 
-  test('doUninstall is not implemented', async () => {
+  test('doUninstall should rm the tool directory', async () => {
     await installer.doUninstall(LOGGER_MOCK);
 
     expect(rm).toHaveBeenCalledExactlyOnceWith(join(EXTENSION_CONTEXT_MOCK.storagePath, cli.toolId), {
