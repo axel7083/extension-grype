@@ -17,8 +17,15 @@
  ***********************************************************************/
 
 import { test, vi, beforeEach, describe, expect, assert } from 'vitest';
-import type { ExtensionContext, CliTool, TelemetryLogger} from '@podman-desktop/api';
-import { CancellationTokenSource , window, cli as cliApi, ProgressLocation, process, window as windowApi } from '@podman-desktop/api';
+import type { ExtensionContext, CliTool, TelemetryLogger } from '@podman-desktop/api';
+import {
+  CancellationTokenSource,
+  window,
+  cli as cliApi,
+  ProgressLocation,
+  process,
+  window as windowApi,
+} from '@podman-desktop/api';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { Octokit } from '@octokit/rest';
